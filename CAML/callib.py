@@ -7,8 +7,10 @@ from torch import nn
 class CalibrationError(nn.Module):
     def __init__(self, n_bins=15):
         super().__init__()
+        lb = 0
+        ub = 1
         self.n_bins = n_bins
-        bin_boundaries = tc.linspace(0, 1, n_bins + 1)
+        bin_boundaries = tc.linspace(lb, ub, n_bins + 1)
         self.bin_lowers = bin_boundaries[:-1]
         self.bin_uppers = bin_boundaries[1:]
     
@@ -88,7 +90,7 @@ class CalibrationError(nn.Module):
                 ys = ys.cuda()
                 yhs = label_pred(xs).argmax(1)
                 phs = conf_pred(xs, yhs)
-
+                
                 ECE_mat_b = self.get_acc_conf_mat(yhs, phs, ys)
                 ECE_mat = ECE_mat + ECE_mat_b if ECE_mat is not None else ECE_mat_b
 

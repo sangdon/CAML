@@ -30,7 +30,6 @@ if __name__ == "__main__":
     print("[test results] cls_error = %2.4f, ECE = %2.4f"%(cls_error, ece))
     
     ##Todo
-    # init dataset
     # documentation
     
     

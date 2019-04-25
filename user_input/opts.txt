@@ -1,7 +1,6 @@
 --exp_name=test_CAML
 --batch_size=100
---learn_model=n
---n_labels=10
+--relearn_model=0
 --n_manifolds=2000 
 --width_max_lb=0.0
 --width_max_ub=1000.0

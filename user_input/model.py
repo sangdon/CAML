@@ -11,13 +11,13 @@ import torch.nn.functional as F
 ##
 class LeNet5(nn.Module):
     
-    def __init__(self, n_labels):
+    def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.lin1 = nn.Linear(256, 120)
         self.lin2 = nn.Linear(120, 84)
-        self.lin3 = nn.Linear(84, n_labels)
+        self.lin3 = nn.Linear(84, 10)
         
     def forward(self, x):
         x = self.feature(x)

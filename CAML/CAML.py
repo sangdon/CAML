@@ -159,7 +159,7 @@ class MahCalibrator(nn.Module):
 
             save_fn = os.path.join(model_root, "params_manifolds_%d-%d.pk")%(
                 (i)*batch_size, (i+1)*batch_size-1)
-            if not os.path.exists(save_fn):
+            if self.params.relearn_model or not os.path.exists(save_fn):
                 print("[%d/%d] learn manifolds..."%((i+1)*batch_size, n_manifolds))
                 
                 ## compute means and inverse covariance matrices of manifolds
@@ -173,8 +173,7 @@ class MahCalibrator(nn.Module):
         
         ## choose a hyperparameter
         w_best_fn = os.path.join(model_root, "width_max_best.pk")
-        if not os.path.exists(w_best_fn):
-#             w_best = self.find_best_width_coarse2fine_linesearch(ld_val, 0.0, 1e5, 5, eps=1e-1)
+        if self.params.relearn_model or not os.path.exists(w_best_fn):
             w_best = self.find_best_width_linesearch(
                 ld_val, self.params.width_max_lb, self.params.width_max_ub, 
                 self.params.width_search_delta)
@@ -196,6 +195,7 @@ class MahCalibrator(nn.Module):
     
     def forward(self, xs):
         with tc.no_grad():
+            n_labels = self.model(xs).size(1) ##FIXME: is there more efficient way?
             zs = self.model.feature(xs)
             # compute distances
             ds_tr = []
@@ -222,7 +222,7 @@ class MahCalibrator(nn.Module):
             
             # estimate a label distribution
             phs = []
-            for y in range(self.params.n_labels):
+            for y in range(n_labels):
                 # label distribution
                 I_close = (ds_tr <= self.get_width_max()).float()
                 I_close_y = I_close.mul((ys_tr == y).float().unsqueeze(0))
@@ -231,8 +231,8 @@ class MahCalibrator(nn.Module):
                 
  
             phs = tc.cat(phs, 1)
-            ind = tc.isnan(phs).sum(1) == self.params.n_labels
-            phs[ind, :] = 1.0/float(self.params.n_labels)
+            ind = tc.isnan(phs).sum(1) == n_labels
+            phs[ind, :] = 1.0/float(n_labels)
             phs[tc.isnan(phs)] = 0.0
             
         return phs
