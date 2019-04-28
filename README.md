@@ -17,7 +17,7 @@ git clone https://github.com/sangdon/CAML.git
 ```
 
 ### Dataset Initialization
-For training and test, initialize datasets. Let the root of a dataset be `<dataset root>`. Under the folder `<dataset root>`, CAML requires three folders `<train>`, `<val>`, `<test>` for training, hyperparameter tuning, and evaluation for CAML, respectively. Under the three folders, folders with a label name are located, `<label 1>`, `<label 2>`, ...,  `<label K>`, where K is the number of labels. Each label folder `<label i>` contains images in png file format. Note that this folder structure follows the convention of pytorch `ImageFolder`, such that CAML can use `ImageFolder` to generally read any datasets. 
+For training and evaluation, initialize datasets. Let the root of a dataset be `<dataset root>`. Under the folder `<dataset root>`, CAML requires three folders `<train>`, `<val>`, `<test>` for training, hyperparameter tuning, and evaluation for CAML, respectively. Under the three folders, folders with a label name are located, `<label 1>`, `<label 2>`, ...,  `<label K>`, where K is the number of labels. Each label folder `<label i>` contains images in png file format. Note that this folder structure follows the convention of pytorch `ImageFolder`, such that CAML can use `ImageFolder` to generally read any datasets. 
 
 #### Example
 For example, the following script initialize the MNIST dataset at `user_input/datasets/MNIST` with the above mentioned folder structure. 
