@@ -1,6 +1,6 @@
 # CAML (Confidence Auditor-based on Manifold Learning)
 
-CAML predicts confidence of a label prediction by a given classifier. Internally, CAML model a calibration predictor by using manifold learing. 
+CAML predicts confidence of a label prediction by a given classifier. Internally, CAML model a calibration predictor by using manifold learning. 
 
 ## Prerequisites
 * Linux
