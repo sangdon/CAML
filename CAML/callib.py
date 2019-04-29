@@ -5,8 +5,9 @@ import torch as tc
 from torch import nn
 
 class CalibrationError(nn.Module):
-    def __init__(self, n_bins=15):
+    def __init__(self, n_bins=15, device=tc.device('cpu')):
         super().__init__()
+        self.device = device
         lb = 0
         ub = 1
         self.n_bins = n_bins
@@ -86,8 +87,8 @@ class CalibrationError(nn.Module):
         ECE_mat = None
         for ld in lds:
             for i, (xs, ys) in enumerate(ld):
-                xs = xs.cuda()
-                ys = ys.cuda()
+                xs = xs.to(self.device)
+                ys = ys.to(self.device)
                 yhs = label_pred(xs).argmax(1)
                 phs = conf_pred(xs, yhs)
                 

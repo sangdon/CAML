@@ -4,14 +4,14 @@ import time
 from torchvision import datasets, transforms
 
 from CAML.CAML import MahCalibrator ##FIXME: too redundent naming
-from CAML.option import TestArgParser
+from CAML.option import RunArgParser
 from CAML.utils import *
 
 
 if __name__ == "__main__":
     
     ## read options
-    params = TestArgParser().read_args()
+    params = RunArgParser().read_args()
 
     ## load a classifier
     model = load_model(params)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     
     ## read image and predict confidence
     x = Image.open(params.image_path)
-    x = transforms.ToTensor()(x).unsqueeze(0).cuda()
+    x = transforms.ToTensor()(x).unsqueeze(0)
     t_start = time.time()
     ph = mah_cal.forward_conf(x)
     t_end = time.time()

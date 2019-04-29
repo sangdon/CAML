@@ -18,6 +18,10 @@ class MahCalibrator(nn.Module):
         self.params = params
         self.width_max = None
         self.mus_loaded = None ##FIXME
+        if self.params.gpu_id >= 0:
+            self.device = tc.device('cuda:{}'.format(self.params.gpu_id))
+        else:
+            self.device = tc.device('cpu')
         
     def save(self, fn):
         pass
@@ -39,7 +43,7 @@ class MahCalibrator(nn.Module):
         return True
     
     def set_width_max(self, width_max):
-        self.width_max = width_max*tc.ones(1).cuda()
+        self.width_max = width_max*tc.ones(1).to(self.device)
     
     def get_width_max(self):
         return self.width_max.item()
@@ -50,8 +54,8 @@ class MahCalibrator(nn.Module):
         n_total = 0.0
         with tc.no_grad():
             for xs, ys in ld:
-                xs = xs.cuda()
-                ys = ys.cuda()
+                xs = xs.to(self.device)
+                ys = ys.to(self.device)
                 if model is None:
                     yhs = self(xs).argmax(1)
                 else:
@@ -92,7 +96,7 @@ class MahCalibrator(nn.Module):
         return mus, Ms
 
     def find_best_width_linesearch(self, ld_val, w_lb, w_ub, w_delta):
-        error_best = T(np.inf).cuda()
+        error_best = T(np.inf).to(self.device)
         w_best = None
         for i, w in enumerate(tc.arange(w_lb, w_ub+w_delta, w_delta)):
             self.set_width_max(w)
@@ -112,11 +116,11 @@ class MahCalibrator(nn.Module):
                               
         
     def find_best_width_coarse2fine_linesearch(self, ld_val, w_lb, w_ub, n_w, eps=1e-1):
-        w_best_prev = T(0.0).cuda()
-        w_best = T(np.inf).cuda()
+        w_best_prev = T(0.0).to(self.device)
+        w_best = T(np.inf).to(self.device)
         while (w_best - w_best_prev).abs() > eps:
             w_rng = tc.linspace(w_lb, w_ub, n_w+1)
-            error_best = T(np.inf).cuda()
+            error_best = T(np.inf).to(self.device)
             for i, w in enumerate(w_rng):
                 self.set_width_max(w)
                 error = self.compute_error(ld_val)
@@ -153,8 +157,8 @@ class MahCalibrator(nn.Module):
         for i, (xs, ys) in enumerate(ld_tr):
             if n_manifold_generated >= n_manifolds:
                 break
-            xs = xs.cuda()
-            ys = ys.cuda()
+            xs = xs.to(self.device)
+            ys = ys.to(self.device)
             batch_size = ys.size(0)
 
             save_fn = os.path.join(model_root, "params_manifolds_%d-%d.pk")%(
@@ -188,7 +192,7 @@ class MahCalibrator(nn.Module):
         # compute ECE
         with tc.no_grad():
             class_error = self.compute_error(ld, self.model)
-            ECE = CalibrationError(self.params.n_bins).compute_ECE(
+            ECE = CalibrationError(self.params.n_bins, self.device).compute_ECE(
                 self.model.forward, self.forward_conf, [ld])
         return ECE, class_error
             
@@ -209,9 +213,9 @@ class MahCalibrator(nn.Module):
                 for i, fn in enumerate(self.manifold_model_fns):
                     with open(fn, 'rb') as f:
                         mus, Ms, ys = pickle.load(f)
-                    mus = mus.cuda().detach_() ##FIXME: cuda()
-                    Ms = Ms.cuda().detach_() ##FIXME: cuda()
-                    ys = ys.cuda().detach_() ##FIXME: cuda()
+                    mus = mus.to(self.device).detach_() 
+                    Ms = Ms.to(self.device).detach_()
+                    ys = ys.to(self.device).detach_()
                     
                     ds_b = self.mah_dist_minibatch(zs, mus, Ms).detach_()
                     ds_tr.append(ds_b)
@@ -238,6 +242,7 @@ class MahCalibrator(nn.Module):
         return phs
 
     def forward_conf(self, xs, yhs=None):
+        xs = xs.to(self.device)
         if yhs is None:
             yhs = self.model(xs).argmax(1)
         phs = self(xs)

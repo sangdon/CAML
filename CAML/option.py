@@ -10,14 +10,10 @@ class BaseArgParser(object):
         # CAML
         self.parser.add_argument('--exp_name', type=str, required=True, 
                                  help='name of an experiment')
-        self.parser.add_argument('--batch_size', type=int, default=100, 
-                                 help='size of batch images for learning')
-        self.parser.add_argument('--relearn_model', type=int, default=0, 
-                                 help='option whether re-learn model or not')
         self.parser.add_argument('--n_manifolds', type=int, default=2000, 
                                  help='number of manifolds to generate')
-        self.parser.add_argument('--n_bins', type=int, default=15, 
-                                 help='number of bins for evaluating calibration error')
+        self.parser.add_argument('--gpu_id', type=int, default=0, 
+                                 help='id of GPU. -1 for CPU')
         
         # classifier
         self.parser.add_argument('--model_def_path', type=str, 
@@ -47,7 +43,13 @@ class TrainArgParser(BaseArgParser):
     def __init__(self):
         super().__init__()
         
+        self.parser.add_argument('--batch_size', type=int, default=100, 
+                                 help='size of batch images for learning')
+        self.parser.add_argument('--relearn_model', type=int, default=0, 
+                                 help='option whether re-learn model or not')
+        
         # manifolds parameters
+        
         self.parser.add_argument('--rotation_max', type=float, default=30.0, 
                                  help='maximum rotation angle in degree when generating manifolds.')
         self.parser.add_argument('--rotation_delta', type=float, default=1.0, 
@@ -65,8 +67,22 @@ class TrainArgParser(BaseArgParser):
         params, _ = self.parser.parse_known_args()
         params.caml_model_root = os.path.join("cache", params.exp_name, "caml_model_root")
         return params
+    
+class EvalArgParser(BaseArgParser):
+    def __init__(self):
+        super().__init__()
+        self.parser.add_argument('--batch_size', type=int, default=100, 
+                                 help='size of batch images for learning')
+        self.parser.add_argument('--n_bins', type=int, default=15, 
+                                 help='number of bins for evaluating calibration error')
         
-class TestArgParser(BaseArgParser):
+    def read_args(self):
+        ## read options
+        params, _ = self.parser.parse_known_args()
+        params.caml_model_root = os.path.join("cache", params.exp_name, "caml_model_root")
+        return params        
+    
+class RunArgParser(BaseArgParser):
     def __init__(self):
         super().__init__()
         self.parser.add_argument('--image_path', required=True, help='path to a test image file')

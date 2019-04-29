@@ -8,4 +8,6 @@ def load_model(params):
     spec.loader.exec_module(module)
     model = getattr(module, params.model_name)()
     model.load_state_dict(tc.load(params.model_path))
-    return model.cuda()
+    if params.gpu_id >= 0:
+        model = model.cuda()
+    return model
