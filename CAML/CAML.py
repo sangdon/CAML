@@ -18,8 +18,8 @@ class MahCalibrator(nn.Module):
         self.params = params
         self.width_max = None
         self.mus_loaded = None ##FIXME
-        if self.params.gpu_id >= 0:
-            self.device = tc.device('cuda:{}'.format(self.params.gpu_id))
+        if self.params.use_gpu:
+            self.device = tc.device('cuda:0')
         else:
             self.device = tc.device('cpu')
         

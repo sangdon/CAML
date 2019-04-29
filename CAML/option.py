@@ -12,8 +12,8 @@ class BaseArgParser(object):
                                  help='name of an experiment')
         self.parser.add_argument('--n_manifolds', type=int, default=2000, 
                                  help='number of manifolds to generate')
-        self.parser.add_argument('--gpu_id', type=int, default=0, 
-                                 help='id of GPU. -1 for CPU')
+        self.parser.add_argument('--use_gpu', type=int, default=1, 
+                                 help='1 when use GPU, 0 for CPU')
         
         # classifier
         self.parser.add_argument('--model_def_path', type=str, 
