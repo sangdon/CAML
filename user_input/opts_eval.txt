@@ -1,0 +1,11 @@
+--exp_name=test_CAML
+--use_gpu=0
+--batch_size=100
+--n_manifolds=2000 
+--n_bins=15
+--model_def_path=user_input/model.py
+--model_name=LeNet5
+--model_path=user_input/model_LeNet5.pt
+--dataset_root=user_input/datasets/MNIST
+--image_size=28
+--gray_scale=1
