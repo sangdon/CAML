@@ -29,9 +29,20 @@ python3 init_MNIST_dataset.py
 
 The CAML can be used in three phases, 1) training, where CAML trains its internal representations, 2) evaluation, where the calibration error of CAML is evaluated on a test set, and 3) running, where a trained CAML model reads one image and predict a confidence. For each phase, the high-level description of the input/output of CAML is as follows:
 
-1. training: `<classifier>`, `<dataset>`, `<base options>`, `<training options>` --> `CAML` --> `<CAML model>`
-1. evaluation: `<classifier>`, `<dataset>`, `<base options>`, `<evalutation options>`, `<CAML model>` --> `CAML` --> `<calibration error>`
-1. running: `<classifier>`, `<dataset>`, `<base options>`, `<running options>`, `<CAML model>` --> `CAML` --> `<confidnece>`
+* training: `<classifier>`, `<dataset>`, `<base options>`, `<training options>` --> `CAML` --> `<CAML model>`
+<p align="center">
+<img align="center" src="https://github.com/sangdon/CAML/blob/master/doc/CAML_training.png" width=500>
+</p>
+
+* evaluation: `<classifier>`, `<dataset>`, `<base options>`, `<evalutation options>`, `<CAML model>` --> `CAML` --> `<calibration error>` 
+<p align="center">
+<img align="center" src="https://github.com/sangdon/CAML/blob/master/doc/CAML_eval.png" width=500>
+</p>
+
+* running: `<classifier>`, `<dataset>`, `<base options>`, `<running options>`, `<CAML model>` --> `CAML` --> `<confidnece>`
+<p align="center">
+<img align="center" src="https://github.com/sangdon/CAML/blob/master/doc/CAML_running.png" width=500>
+</p>
 
 Here, each input, `<classifier>`, `<dataset>`, `<base options>`, `<training options>`, `<evalutation options>`, `<running options>` are specified by options of CAML. For outputs, `<CAML model>` represents a folder where CAML model is saved, `<calibration error>` and `<confidnece>` are scalar numbers printed in a screen.
 
