@@ -49,7 +49,6 @@ class TrainArgParser(BaseArgParser):
                                  help='option whether re-learn model or not')
         
         # manifolds parameters
-        
         self.parser.add_argument('--rotation_max', type=float, default=30.0, 
                                  help='maximum rotation angle in degree when generating manifolds.')
         self.parser.add_argument('--rotation_delta', type=float, default=1.0, 
@@ -66,6 +65,7 @@ class TrainArgParser(BaseArgParser):
         ## read options
         params, _ = self.parser.parse_known_args()
         params.caml_model_root = os.path.join("cache", params.exp_name, "caml_model_root")
+        params.manifold_gen_type = "ImageRotationManifold" ##FIXME: use this by defualt. Under development
         return params
     
 class EvalArgParser(BaseArgParser):
