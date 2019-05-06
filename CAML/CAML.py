@@ -23,15 +23,7 @@ class MahCalibrator(nn.Module):
             self.device = tc.device('cuda:0')
         else:
             self.device = tc.device('cpu')
-        
-        ## manifold generator
-        if params.manifold_gen_type == "ImageRotationManifold":
-            raise NotImplementedError
-        elif params.manifold_gen_type == "OneStepShiftManifold":
-            self.manifold_gen = OneStepShiftManifold(params.feat_start_idx, params.feat_end_idx)
-        ## manifold approximator
-        self.manifold_approx = MVNManifoldApproximator()
-        
+
     def save(self, fn):
         pass
     
@@ -89,21 +81,21 @@ class MahCalibrator(nn.Module):
         return ds
     
     
-#     def compute_rotation_manifolds(self, xs, pred, deg_max, delta=1.0, slow=False):
-#         from CAML.rotation_manifolds import rotate_images, learn_mu_icov
-#         # rotate images
-#         xs_rot = rotate_images(xs, deg_max, delta=delta)
-#         if slow:
-#             zs_rot = []
-#             with tc.no_grad():
-#                 for x in xs_rot:
-#                     zs_rot.append(pred.feature(x).view(x.size(0), -1).unsqueeze(0))
-#                 zs_rot = tc.cat(zs_rot, 0)    
-#         else:
-#             zs_rot = pred.feature(xs_rot.view(-1, *xs_rot.size()[2:])).view(*xs_rot.size()[0:2], -1)
-#         # learn params
-#         mus, Ms = learn_mu_icov(zs_rot)
-#         return mus, Ms
+    def compute_rotation_manifolds(self, xs, pred, deg_max, delta=1.0, slow=False):
+        from CAML.rotation_manifolds import rotate_images, learn_mu_icov
+        # rotate images
+        xs_rot = rotate_images(xs, deg_max, delta=delta)
+        if slow:
+            zs_rot = []
+            with tc.no_grad():
+                for x in xs_rot:
+                    zs_rot.append(pred.feature(x).view(x.size(0), -1).unsqueeze(0))
+                zs_rot = tc.cat(zs_rot, 0)    
+        else:
+            zs_rot = pred.feature(xs_rot.view(-1, *xs_rot.size()[2:])).view(*xs_rot.size()[0:2], -1)
+        # learn params
+        mus, Ms = learn_mu_icov(zs_rot)
+        return mus, Ms
 
     def find_best_width_linesearch(self, ld_val, w_lb, w_ub, w_delta):
         error_best = T(np.inf).to(self.device)
@@ -175,9 +167,8 @@ class MahCalibrator(nn.Module):
                 print("[%d/%d] learn manifolds..."%((i+1)*batch_size, n_manifolds))
                 
                 ## compute means and inverse covariance matrices of manifolds
-                manifold_model = self.manifold_approx(
-                    self.manifold_gen(xs), 
-                    self.model.feature)
+                manifold_model = self.compute_rotation_manifolds(
+                    xs, self.model, deg_max, delta, slow)
                 ## save means and inverse covariance matrices of manifolds
                 with open(save_fn, 'wb') as f:
                     pickle.dump([m.cpu() for m in manifold_model] + [ys.cpu()], f)

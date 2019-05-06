@@ -1,4 +1,4 @@
---exp_name=test_CAML
+--exp_name=CAML_MNIST_example
 --use_gpu=0
 --batch_size=100
 --relearn_model=0
