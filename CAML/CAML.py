@@ -10,6 +10,7 @@ import torch.tensor as T
 from  torch import nn
 
 from CAML.callib import CalibrationError
+from CAML.mani_gens import *
 
 class MahCalibrator(nn.Module):
     def __init__(self, params, model):
@@ -22,6 +23,14 @@ class MahCalibrator(nn.Module):
             self.device = tc.device('cuda:0')
         else:
             self.device = tc.device('cpu')
+        
+        ## manifold generator
+        if params.manifold_gen_type == "ImageRotationManifold":
+            raise NotImplementedError
+        elif params.manifold_gen_type == "OneStepShiftManifold":
+            self.manifold_gen = OneStepShiftManifold(params.feat_start_idx, params.feat_end_idx)
+        ## manifold approximator
+        self.manifold_approx = MVNManifoldApproximator()
         
     def save(self, fn):
         pass
@@ -79,21 +88,22 @@ class MahCalibrator(nn.Module):
             ds = tc.cat(ds, 0)
         return ds
     
-    def compute_rotation_manifolds(self, xs, pred, deg_max, delta=1.0, slow=False):
-        from CAML.rotation_manifolds import rotate_images, learn_mu_icov
-        # rotate images
-        xs_rot = rotate_images(xs, deg_max, delta=delta)
-        if slow:
-            zs_rot = []
-            with tc.no_grad():
-                for x in xs_rot:
-                    zs_rot.append(pred.feature(x).view(x.size(0), -1).unsqueeze(0))
-                zs_rot = tc.cat(zs_rot, 0)    
-        else:
-            zs_rot = pred.feature(xs_rot.view(-1, *xs_rot.size()[2:])).view(*xs_rot.size()[0:2], -1)
-        # learn params
-        mus, Ms = learn_mu_icov(zs_rot)
-        return mus, Ms
+    
+#     def compute_rotation_manifolds(self, xs, pred, deg_max, delta=1.0, slow=False):
+#         from CAML.rotation_manifolds import rotate_images, learn_mu_icov
+#         # rotate images
+#         xs_rot = rotate_images(xs, deg_max, delta=delta)
+#         if slow:
+#             zs_rot = []
+#             with tc.no_grad():
+#                 for x in xs_rot:
+#                     zs_rot.append(pred.feature(x).view(x.size(0), -1).unsqueeze(0))
+#                 zs_rot = tc.cat(zs_rot, 0)    
+#         else:
+#             zs_rot = pred.feature(xs_rot.view(-1, *xs_rot.size()[2:])).view(*xs_rot.size()[0:2], -1)
+#         # learn params
+#         mus, Ms = learn_mu_icov(zs_rot)
+#         return mus, Ms
 
     def find_best_width_linesearch(self, ld_val, w_lb, w_ub, w_delta):
         error_best = T(np.inf).to(self.device)
@@ -103,7 +113,7 @@ class MahCalibrator(nn.Module):
             t_start = time.time()
             error = self.compute_error(ld_val)
             t_end = time.time()
-            if error_best*1.01 < error:
+            if error_best*1.1 < error:
                 break
             if error < error_best:
                 error_best = error
@@ -137,9 +147,7 @@ class MahCalibrator(nn.Module):
                           (w, w_rng[0], w_rng[-1], w_best, error_best))
         
         return w_best
-            
-            
-    
+
     ##FIXME: change the slow option to something else
     def train(self, ld_tr, ld_val, slow=False):
         ## parameters
@@ -167,8 +175,9 @@ class MahCalibrator(nn.Module):
                 print("[%d/%d] learn manifolds..."%((i+1)*batch_size, n_manifolds))
                 
                 ## compute means and inverse covariance matrices of manifolds
-                manifold_model = self.compute_rotation_manifolds(
-                    xs, self.model, deg_max, delta, slow)
+                manifold_model = self.manifold_approx(
+                    self.manifold_gen(xs), 
+                    self.model.feature)
                 ## save means and inverse covariance matrices of manifolds
                 with open(save_fn, 'wb') as f:
                     pickle.dump([m.cpu() for m in manifold_model] + [ys.cpu()], f)
@@ -233,7 +242,7 @@ class MahCalibrator(nn.Module):
                 ph = I_close_y.sum(1).div(I_close.sum(1))
                 phs.append(ph.unsqueeze(1))
                 
- 
+
             phs = tc.cat(phs, 1)
             ind = tc.isnan(phs).sum(1) == n_labels
             phs[ind, :] = 1.0/float(n_labels)
